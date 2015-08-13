@@ -226,12 +226,26 @@
         [items addObject:title];
     }
     
-    //  Create a fake button to maintain flexibleSpace between doneButton and nilButton. (Actually it moves done button to right side.
-    IQBarButtonItem *nilButton =[[IQBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    [items addObject:nilButton];
+//    //  Create a fake button to maintain flexibleSpace between doneButton and nilButton. (Actually it moves done button to right side.
+//    IQBarButtonItem *nilButton =[[IQBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+//    [items addObject:nilButton];
     
     //  Create a done button to show on keyboard to resign it. Adding a selector to resign it.
-    IQBarButtonItem *doneButton = [[IQBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:target action:action];
+    // Get the top level "bundle" which may actually be the framework
+    NSBundle *mainBundle = [NSBundle bundleForClass:[IQKeyboardManager class]];
+    
+    // Check to see if the resource bundle exists inside the top level bundle
+    NSBundle *resourcesBundle = [NSBundle bundleWithPath:[mainBundle pathForResource:@"IQKeyboardManager" ofType:@"bundle"]];
+    
+    if (resourcesBundle == nil) {
+        resourcesBundle = mainBundle;
+    }
+    UIImage *imageDone = [UIImage imageNamed:@"IQButtonBarKeyboardDone" inBundle:resourcesBundle compatibleWithTraitCollection:nil];
+    
+    //  Create a done button to show on keyboard to resign it. Adding a selector to resign it.
+    IQBarButtonItem *doneButton = [[IQBarButtonItem alloc] initWithImage:imageDone style:UIBarButtonItemStylePlain target:target action:action];
+    
+    
     [items addObject:doneButton];
     
     //  Adding button to toolBar.
@@ -429,8 +443,19 @@
  
 	NSMutableArray *items = [[NSMutableArray alloc] init];
 	
+    // Get the top level "bundle" which may actually be the framework
+    NSBundle *mainBundle = [NSBundle bundleForClass:[IQKeyboardManager class]];
+    
+    // Check to see if the resource bundle exists inside the top level bundle
+    NSBundle *resourcesBundle = [NSBundle bundleWithPath:[mainBundle pathForResource:@"IQKeyboardManager" ofType:@"bundle"]];
+    
+    if (resourcesBundle == nil) {
+        resourcesBundle = mainBundle;
+    }
+    UIImage *imageDone = [UIImage imageNamed:@"IQButtonBarKeyboardDone" inBundle:resourcesBundle compatibleWithTraitCollection:nil];
+
 	//  Create a done button to show on keyboard to resign it. Adding a selector to resign it.
-    IQBarButtonItem *doneButton =[[IQBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:target action:doneAction];
+    IQBarButtonItem *doneButton = [[IQBarButtonItem alloc] initWithImage:imageDone style:UIBarButtonItemStylePlain target:target action:doneAction];
 	
 	if (IQ_IS_IOS7_OR_GREATER)
     {
@@ -515,7 +540,26 @@
     
 	[items addObject:nilButton];
 	[items addObject:doneButton];
-	
+    
+    // hacky swapping
+    // 0 <
+    // 1 -
+    // 2 >
+    // 3 ------
+    // 4 Done
+    
+    
+    // shift by one
+    NSObject* done = [items lastObject];
+    [items insertObject:done atIndex:0];
+    [items removeLastObject];
+    
+    // move separator
+    NSObject* separator = [items lastObject];
+    [items insertObject:separator atIndex:1];
+    [items removeLastObject];
+    
+    
     //  Adding button to toolBar.
     [toolbar setItems:items];
 	
@@ -674,8 +718,8 @@
 		if (IQ_IS_IOS7_OR_GREATER && [[inputAccessoryView items] count]>3)
 		{
 			//  Getting first item from inputAccessoryView.
-			IQBarButtonItem *prevButton = (IQBarButtonItem*)[[inputAccessoryView items] objectAtIndex:0];
-			IQBarButtonItem *nextButton = (IQBarButtonItem*)[[inputAccessoryView items] objectAtIndex:2];
+			IQBarButtonItem *prevButton = (IQBarButtonItem*)[[inputAccessoryView items] objectAtIndex:2];
+			IQBarButtonItem *nextButton = (IQBarButtonItem*)[[inputAccessoryView items] objectAtIndex:4];
 			
 			//  If it is UIBarButtonItem and it's customView is not nil.
 			if ([prevButton isKindOfClass:[IQBarButtonItem class]] && [nextButton isKindOfClass:[IQBarButtonItem class]])
